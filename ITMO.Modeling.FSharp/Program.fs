@@ -1,5 +1,6 @@
 ﻿module Simulation.Aivika.Examples.Program
 
+open ITMO.Modeling.FSharp
 open Simulation.Aivika
 open Simulation.Aivika.Results
 open Simulation.Aivika.Experiments
@@ -10,27 +11,21 @@ open Simulation.Aivika.Charting.Web
 let main _ =
   let experiment = Experiment()
 
-  experiment.Specs <- Model.specs
-  experiment.RunCount <- 1000
+  experiment.Specs <- SimpleModel.specs
+  experiment.RunCount <- 100
 
-  let queueSeries1 = ResultSet.findByName "queue1"
-  let queueSeries2 = ResultSet.findByName "queue2"
-
-  let serverSeries1 = ResultSet.findByName "workStation1"
-  let serverSeries2 = ResultSet.findByName "workStation2"
-
-  let timerSeries = ResultSet.findByName "arrivalTimer"
+  let queue = ResultSet.findByName "queue"
+  let workStation = ResultSet.findByName "workStation"
+  let arrivalTimer = ResultSet.findByName "arrivalTimer"
 
   let providers = [
     ExperimentProvider.experimentSpecs
-    ExperimentProvider.queue queueSeries1
-    ExperimentProvider.server serverSeries1
-    ExperimentProvider.queue queueSeries2
-    ExperimentProvider.server serverSeries2
-    ExperimentProvider.arrivalTimer timerSeries
+    ExperimentProvider.queue queue
+    ExperimentProvider.server workStation
+    ExperimentProvider.arrivalTimer arrivalTimer
   ]
 
-  experiment.RenderHtml(Model.model, providers)
+  experiment.RenderHtml(SimpleModel.model, providers)
   |> Async.RunSynchronously
 
   0

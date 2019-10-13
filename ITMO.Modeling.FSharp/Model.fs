@@ -7,7 +7,7 @@ open Simulation.Aivika.Results
 /// the simulation specs
 let specs = {
   StartTime = 0.0
-  StopTime = 300.0
+  StopTime = 10.0
   DT = 0.1
   Method = RungeKutta4
   GeneratorType = StrongGenerator
@@ -73,14 +73,13 @@ let model = simulation {
 
   // return the simulation results
   return [
-    ResultSource.From("queue1", queue1, "Queue no. 1");
-    ResultSource.From("workStation1", workStation1, "Work Station no. 1");
-    ResultSource.From("queue2", queue2, "Queue no. 2");
-    ResultSource.From("workStation2", workStation2, "Work Station no. 2");
+    ResultSource.From("queue1", queue1, "Queue no. 1")
+    ResultSource.From("workStation1", workStation1, "Work Station no. 1")
+    ResultSource.From("queue2", queue2, "Queue no. 2")
+    ResultSource.From("workStation2", workStation2, "Work Station no. 2")
     ResultSource.From("arrivalTimer", arrivalTimer, "The arrival timer")
   ] |> ResultSet.create
  }
 
-/// the model summary
 let modelSummary =
   model |> Simulation.map ResultSet.summary
