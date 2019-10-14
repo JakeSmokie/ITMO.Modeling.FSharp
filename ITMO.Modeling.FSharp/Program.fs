@@ -12,7 +12,7 @@ let main _ =
   let experiment = Experiment()
 
   experiment.Specs <- SimpleModel.specs
-  experiment.RunCount <- 100
+  experiment.RunCount <- 1
 
   let queue = ResultSet.findByName "queue"
   let workStation = ResultSet.findByName "workStation"
@@ -20,7 +20,7 @@ let main _ =
 
   let providers = [
     ExperimentProvider.experimentSpecs
-    ExperimentProvider.queue queue
+    ExperimentProvider.infiniteQueue queue
     ExperimentProvider.server workStation
     ExperimentProvider.arrivalTimer arrivalTimer
   ]
