@@ -22,12 +22,14 @@ let main _ =
   let queue = ResultSet.findByName "queue"
   let workStation = ResultSet.findByName "workStation"
   let arrivalTimer = ResultSet.findByName "arrivalTimer"
+  let avg = ResultSet.findByName "avg"
 
   let providers = [
     ExperimentProvider.experimentSpecs
     ExperimentProvider.infiniteQueue queue
     ExperimentProvider.server workStation
     ExperimentProvider.arrivalTimer arrivalTimer
+    ExperimentProvider.lastValueHistogram avg
   ]
 
   experiment.RenderHtml(SimpleModel.createModel Coefficients.personCoefficients, providers)

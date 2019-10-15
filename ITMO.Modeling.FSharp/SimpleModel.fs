@@ -26,13 +26,13 @@ let createModel coefficients = simulation {
   let! firstServer =
     List.init coefficients.ChannelsCount (fun _ -> Server.createRandomExponential coefficients.WorkTime)
     |> Simulation.ofList
-  
+    
   let! secondQueue = Queue.createUsingFCFS coefficients.Capacity2 |> Eventive.runInStartTime
   let! secondServer = Server.createRandomExponential coefficients.WorkTime
 
   let! thirdQueue = Queue.createUsingFCFS coefficients.Capacity3 |> Eventive.runInStartTime
   let! thirdServer = Server.createRandomExponential coefficients.WorkTime
-
+  
   let! arrivalTimer = ArrivalTimer.create
 
   let k =
@@ -56,8 +56,15 @@ let createModel coefficients = simulation {
     |> Stream.sink
     |> Proc.runInStartTime
 
+  let serversProcessingTime =
+    firstServer
+    |> List.map Server.totalProcessingTime
+    |> Eventive.ofList
+    |> Eventive.map List.average
+  
   return [
     ResultSource.From("queue", firstQueue, "Queue no. 1")
+    ResultSource.From("avg", serversProcessingTime, "avg")
     ResultSource.From("workStation", firstServer, "Work Station no. 1")
     ResultSource.From("arrivalTimer", arrivalTimer, "The arrival timer")
   ] |> ResultSet.create
