@@ -24,7 +24,8 @@ let createModel coefficients = simulation {
     |> Eventive.runInStartTime
     
   let! firstServer =
-    Server.createRandomExponential (coefficients.WorkTime / (float coefficients.ChannelsCount))
+    List.init coefficients.ChannelsCount (fun _ -> Server.createRandomExponential coefficients.WorkTime)
+    |> Simulation.ofList
   
   let! secondQueue = Queue.createUsingFCFS coefficients.Capacity2 |> Eventive.runInStartTime
   let! secondServer = Server.createRandomExponential coefficients.WorkTime
@@ -37,10 +38,9 @@ let createModel coefficients = simulation {
   let k =
     inputStream
     |> InfiniteQueue.processor firstQueue
-//    |> Stream.split coefficients.ChannelsCount
-//    |> List.map (Server.processor firstServer)
-//    |> Stream.merge
-    |> Server.processor firstServer
+    |> Stream.split coefficients.ChannelsCount
+    |> List.map2 (Server.processor) firstServer
+    |> Stream.merge
     |> ArrivalTimer.processor arrivalTimer
   
   do! k
