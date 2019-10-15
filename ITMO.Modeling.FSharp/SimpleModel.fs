@@ -38,9 +38,7 @@ let createModel coefficients = simulation {
   let k =
     inputStream
     |> InfiniteQueue.processor firstQueue
-    |> Stream.split coefficients.ChannelsCount
-    |> List.map2 (Server.processor) firstServer
-    |> Stream.merge
+    |> Processor.par (List.map (Server.processor) firstServer)
     |> ArrivalTimer.processor arrivalTimer
   
   do! k
