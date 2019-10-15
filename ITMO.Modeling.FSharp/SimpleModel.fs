@@ -41,16 +41,21 @@ let createModel coefficients = simulation {
     |> Processor.par (List.map Server.processor firstServer)
     |> ArrivalTimer.processor arrivalTimer
   
+  let a = proc {
+    return ()
+  }
+  
   do! k
-    |> Processor.arrc (fun x -> proc {
-      let! useSecond = Parameter.randomTrue coefficients.BranchProbability |> Parameter.lift
-      
-      if useSecond
-      then ()
-      else ()
-      
-      return x
-    })
+//    |> (fun x -> proc {
+//      let! useSecond = Parameter.randomTrue coefficients.BranchProbability |> Parameter.lift
+//      
+//      if useSecond
+//      then ()
+//      else ()
+//      
+//      return x
+//    })
+    |> Stream.trace None None None
     |> Stream.sink
     |> Proc.runInStartTime
 
