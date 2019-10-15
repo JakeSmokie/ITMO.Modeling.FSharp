@@ -33,4 +33,5 @@ let main _ =
   experiment.RenderHtml(SimpleModel.createModel Coefficients.personCoefficients, providers)
   |> Async.RunSynchronously
 
+  printfn "%A" Coefficients.personCoefficients
   0

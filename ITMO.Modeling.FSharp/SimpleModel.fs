@@ -2,6 +2,7 @@
 
 open ITMO.Modeling.FSharp.Coefficients
 open Simulation.Aivika
+open Simulation.Aivika
 open Simulation.Aivika.Queues
 open Simulation.Aivika.Results
 
@@ -14,7 +15,7 @@ let specs = {
 }
 
 let createModel coefficients = simulation {
-  let inputStream = Stream.randomExponential (1.0 / coefficients.StreamRate)
+  let inputStream = Stream.randomExponential (1.0 / coefficients.StreamComingTime)
 
   let! firstQueue = InfiniteQueue.createUsingFCFS |> Eventive.runInStartTime
   let! firstServer = Server.createRandomExponential coefficients.WorkTime
@@ -27,19 +28,22 @@ let createModel coefficients = simulation {
 
   let! arrivalTimer = ArrivalTimer.create
 
-  do! inputStream
+  let k =
+    inputStream
     |> InfiniteQueue.processor firstQueue
     |> Server.processor firstServer
-    |> Processor.arrc (fun s -> proc {
-      let! useSecond = Parameter.randomTrue coefficients.BranchProbability |> Parameter.lift
-
-      if useSecond
-      then
-        return s
-      else
-        return s
-    })
     |> ArrivalTimer.processor arrivalTimer
+  
+  do! k
+    |> Processor.arrc (fun x -> proc {
+      let! useSecond = Parameter.randomTrue coefficients.BranchProbability |> Parameter.lift
+      
+      if useSecond
+      then ()
+      else ()
+      
+      return x
+    })
     |> Stream.sink
     |> Proc.runInStartTime
 
