@@ -38,7 +38,7 @@ let createModel coefficients = simulation {
   let k =
     inputStream
     |> InfiniteQueue.processor firstQueue
-    |> Processor.par (List.map (Server.processor) firstServer)
+    |> Processor.par (List.map Server.processor firstServer)
     |> ArrivalTimer.processor arrivalTimer
   
   do! k
