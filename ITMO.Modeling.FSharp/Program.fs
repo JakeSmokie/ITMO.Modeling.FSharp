@@ -17,7 +17,7 @@ let main _ =
   let experiment = Experiment()
 
   experiment.Specs <- SimpleModel.specs
-  experiment.RunCount <- 100
+  experiment.RunCount <- 20
 
   let firstQueue = ResultSet.findByName "queue 1"
   let secondQueue = ResultSet.findByName "queue 2"
@@ -26,6 +26,10 @@ let main _ =
   let firstServer = ResultSet.findByName "server 1"
   let secondServer = ResultSet.findByName "server 2"
   let thirdServer = ResultSet.findByName "server 3"
+  
+  let firstServerTime = ResultSet.findByName "server 1 time"
+  let secondServerTime = ResultSet.findByName "server 2 time"
+  let thirdServerTime = ResultSet.findByName "server 3 time"
     
   let arrivalTimer = ResultSet.findByName "arrivalTimer"
 
@@ -39,6 +43,14 @@ let main _ =
     ExperimentProvider.server firstServer
     ExperimentProvider.server secondServer
     ExperimentProvider.server thirdServer
+    
+    ExperimentProvider.deviationChart firstServerTime
+    ExperimentProvider.deviationChart secondServerTime
+    ExperimentProvider.deviationChart thirdServerTime
+    
+    ExperimentProvider.lastValueStats firstServerTime
+    ExperimentProvider.lastValueStats secondServerTime
+    ExperimentProvider.lastValueStats thirdServerTime
     
     ExperimentProvider.arrivalTimer arrivalTimer
   ]
