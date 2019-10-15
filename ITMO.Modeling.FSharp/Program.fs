@@ -17,7 +17,7 @@ let main _ =
   let experiment = Experiment()
 
   experiment.Specs <- SimpleModel.specs
-  experiment.RunCount <- 1
+  experiment.RunCount <- 100
 
   let queue = ResultSet.findByName "queue"
   let workStation = ResultSet.findByName "workStation"
