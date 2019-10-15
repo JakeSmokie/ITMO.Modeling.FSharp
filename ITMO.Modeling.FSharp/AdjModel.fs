@@ -145,11 +145,11 @@ let model: Simulation<ResultSet> = simulation {
     and inputProcess = proc {
             let xs: Stream<_> =
                 inputStream
-                    |> ArrivalTimer.processor inputArrivalTimer
+                |> ArrivalTimer.processor inputArrivalTimer
             for a in xs do
                 do! inspectionQueue
-                        |> InfiniteQueue.enqueue a
-                        |> Eventive.lift
+                    |> InfiniteQueue.enqueue a
+                    |> Eventive.lift
         }
     // run the process of adjustment
     do! adjustmentProcess

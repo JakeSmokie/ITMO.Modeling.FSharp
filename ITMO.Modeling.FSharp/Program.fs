@@ -19,17 +19,28 @@ let main _ =
   experiment.Specs <- SimpleModel.specs
   experiment.RunCount <- 100
 
-  let queue = ResultSet.findByName "queue"
-  let workStation = ResultSet.findByName "workStation"
+  let firstQueue = ResultSet.findByName "queue 1"
+  let secondQueue = ResultSet.findByName "queue 2"
+  let thirdQueue = ResultSet.findByName "queue 3"
+
+  let firstServer = ResultSet.findByName "server 1"
+  let secondServer = ResultSet.findByName "server 2"
+  let thirdServer = ResultSet.findByName "server 3"
+    
   let arrivalTimer = ResultSet.findByName "arrivalTimer"
-  let avg = ResultSet.findByName "avg"
 
   let providers = [
     ExperimentProvider.experimentSpecs
-    ExperimentProvider.infiniteQueue queue
-    ExperimentProvider.server workStation
+    
+    ExperimentProvider.infiniteQueue firstQueue
+    ExperimentProvider.queue secondQueue
+    ExperimentProvider.queue thirdQueue
+    
+    ExperimentProvider.server firstServer
+    ExperimentProvider.server secondServer
+    ExperimentProvider.server thirdServer
+    
     ExperimentProvider.arrivalTimer arrivalTimer
-    ExperimentProvider.lastValueHistogram avg
   ]
 
   experiment.RenderHtml(SimpleModel.createModel Coefficients.personCoefficients, providers)

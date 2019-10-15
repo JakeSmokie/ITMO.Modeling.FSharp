@@ -22,53 +22,68 @@ let createModel coefficients = simulation {
   let! firstQueue =
     InfiniteQueue.createUsingFCFS
     |> Eventive.runInStartTime
-    
+
   let! firstServer =
-    List.init coefficients.ChannelsCount (fun _ -> Server.createRandomExponential coefficients.WorkTime)
+    fun _ -> Server.createRandomExponential coefficients.WorkTime
+    |> List.init coefficients.ChannelsCount
     |> Simulation.ofList
-    
+
   let! secondQueue = Queue.createUsingFCFS coefficients.Capacity2 |> Eventive.runInStartTime
   let! secondServer = Server.createRandomExponential coefficients.WorkTime
 
   let! thirdQueue = Queue.createUsingFCFS coefficients.Capacity3 |> Eventive.runInStartTime
   let! thirdServer = Server.createRandomExponential coefficients.WorkTime
-  
+
   let! arrivalTimer = ArrivalTimer.create
 
-  let k =
-    inputStream
-    |> InfiniteQueue.processor firstQueue
-    |> Processor.par (List.map Server.processor firstServer)
+  do! (proc {
+    let stream =
+      inputStream
+      |> InfiniteQueue.processor firstQueue
+      |> Processor.par (List.map Server.processor firstServer)
+
+    for x in stream do
+      let! third =
+        Parameter.randomTrue coefficients.BranchProbability
+        |> Parameter.lift
+
+      if third then
+        do! thirdQueue
+            |> Queue.enqueueOrLost_ x
+            |> Eventive.lift
+      else
+        do! secondQueue
+            |> Queue.enqueueOrLost_ x
+            |> Eventive.lift
+  } |> Proc.runInStartTime)
+
+  do!
+    secondQueue
+    |> Queue.dequeue
+    |> Stream.repeat
+    |> Server.processor secondServer
     |> ArrivalTimer.processor arrivalTimer
-  
-  let a = proc {
-    return ()
-  }
-  
-  do! k
-//    |> (fun x -> proc {
-//      let! useSecond = Parameter.randomTrue coefficients.BranchProbability |> Parameter.lift
-//      
-//      if useSecond
-//      then ()
-//      else ()
-//      
-//      return x
-//    })
-    |> Stream.trace None None None
     |> Stream.sink
     |> Proc.runInStartTime
 
-  let serversProcessingTime =
-    firstServer
-    |> List.map Server.totalProcessingTime
-    |> Eventive.ofList
-    |> Eventive.map List.average
-  
+  do!
+    thirdQueue
+    |> Queue.dequeue
+    |> Stream.repeat
+    |> Server.processor thirdServer
+    |> ArrivalTimer.processor arrivalTimer
+    |> Stream.sink
+    |> Proc.runInStartTime
+
   return [
-    ResultSource.From("queue", firstQueue, "Queue no. 1")
-    ResultSource.From("avg", serversProcessingTime, "avg")
-    ResultSource.From("workStation", firstServer, "Work Station no. 1")
+    ResultSource.From("queue 1", firstQueue, "Queue no. 1")
+    ResultSource.From("queue 2", secondQueue, "Queue no. 2")
+    ResultSource.From("queue 3", thirdQueue, "Queue no. 3")
+    
+    ResultSource.From("server 1", firstServer, "Work Station no. 1")
+    ResultSource.From("server 2", secondServer, "Work Station no. 2")
+    ResultSource.From("server 3", thirdServer, "Work Station no. 3")
+    
     ResultSource.From("arrivalTimer", arrivalTimer, "The arrival timer")
   ] |> ResultSet.create
  }
