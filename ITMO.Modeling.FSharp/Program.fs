@@ -1,6 +1,11 @@
 ﻿module Simulation.Aivika.Examples.Program
 
 open ITMO.Modeling.FSharp
+open ITMO.Modeling.FSharp
+open ITMO.Modeling.FSharp
+open ITMO.Modeling.FSharp
+open Simulation.Aivika
+open Simulation.Aivika
 open Simulation.Aivika
 open Simulation.Aivika.Results
 open Simulation.Aivika.Experiments
@@ -25,7 +30,7 @@ let main _ =
     ExperimentProvider.arrivalTimer arrivalTimer
   ]
 
-  experiment.RenderHtml(SimpleModel.model, providers)
+  experiment.RenderHtml(SimpleModel.createModel Coefficients.personCoefficients, providers)
   |> Async.RunSynchronously
 
   0

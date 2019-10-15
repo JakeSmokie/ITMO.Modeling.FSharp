@@ -12,8 +12,8 @@ let person = {
 
 type Coefficients = {
   ChannelsCount: int
-  MeanWorkTime: float
-  Rate: float
+  WorkTime: float
+  StreamRate: float
   BranchProbability: float
   Capacity2: int
   Capacity3: int
@@ -27,9 +27,12 @@ let getCoefficientsForPerson person =
   
   {
     ChannelsCount = channelsCount
-    MeanWorkTime = float a
-    Rate = (float channelsCount) * 0.9 / (float a)
+    WorkTime = float a
+    StreamRate = (float channelsCount) * 0.9 / (float a)
     BranchProbability = (float a) / (float a + float b)
     Capacity2 = 3 + a % 5
     Capacity3 = 6 - a % 5
   }
+
+let personCoefficients =
+  getCoefficientsForPerson person

@@ -61,10 +61,10 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
+    <Compile Include="Coefficients.fs" />
     <Compile Include="Model.fs" />
     <Compile Include="SimpleModel.fs" />
     <Compile Include="Program.fs" />
-    <Compile Include="Coefficients.fs" />
   </ItemGroup>
   <Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')" />
 </Project>
