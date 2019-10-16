@@ -3,7 +3,6 @@
 open ITMO.Modeling.FSharp.Coefficients
 
 open Simulation.Aivika
-open Simulation.Aivika
 open Simulation.Aivika.Queues
 open Simulation.Aivika.Results
 
