@@ -62,9 +62,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
     <Compile Include="Coefficients.fs" />
-    <Compile Include="Model.fs" />
     <Compile Include="SimpleModel.fs" />
-    <Compile Include="AdjModel.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')" />

@@ -1,17 +1,14 @@
 ﻿module ITMO.Modeling.FSharp.SimpleModel
 
 open ITMO.Modeling.FSharp.Coefficients
-open Simulation.Aivika
-open Simulation.Aivika
-open Simulation.Aivika
-open Simulation.Aivika
+
 open Simulation.Aivika
 open Simulation.Aivika.Queues
 open Simulation.Aivika.Results
 
 let specs = {
   StartTime = 0.0
-  StopTime = 1000.0
+  StopTime = 1200.0
   DT = 0.1
   Method = RungeKutta4
   GeneratorType = StrongGenerator
