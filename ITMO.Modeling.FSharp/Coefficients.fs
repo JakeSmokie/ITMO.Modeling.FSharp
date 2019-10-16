@@ -17,6 +17,9 @@ type Coefficients = {
   BranchProbability: float
   Capacity2: int
   Capacity3: int
+
+  WithConstAndUniform: bool
+  VC: float
 }
 
 let getCoefficientsForPerson person =
@@ -32,6 +35,9 @@ let getCoefficientsForPerson person =
     BranchProbability = (float a) / (float a + float b)
     Capacity2 = 3 + a % 5
     Capacity3 = 6 - a % 5
+  
+    WithConstAndUniform = false
+    VC = 0.3
   }
 
 let personCoefficients =

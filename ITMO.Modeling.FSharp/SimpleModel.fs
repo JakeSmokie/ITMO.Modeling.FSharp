@@ -28,11 +28,24 @@ let createModel coefficients = simulation {
     |> Simulation.ofList
 
   let! secondQueue = Queue.createUsingFCFS coefficients.Capacity2 |> Eventive.runInStartTime
-  let! secondServer = Server.createRandomExponential coefficients.WorkTime
+  let! secondServer =
+    if not coefficients.WithConstAndUniform
+    then Server.createRandomExponential coefficients.WorkTime
+    else Server.create (fun a -> proc {
+           do! Proc.hold coefficients.WorkTime
+           return a
+         })
 
   let! thirdQueue = Queue.createUsingFCFS coefficients.Capacity3 |> Eventive.runInStartTime
-  let! thirdServer = Server.createRandomExponential coefficients.WorkTime
-
+  let! thirdServer =
+    if not coefficients.WithConstAndUniform
+    then Server.createRandomExponential coefficients.WorkTime
+    else
+      let mean = coefficients.WorkTime
+      let vc = (sqrt 3.0) * coefficients.VC
+      
+      Server.createRandomUniform (mean * (1.0 - vc)) (mean * (1.0 + vc))
+  
   let! arrivalTimer = ArrivalTimer.create
 
   do! (proc {
@@ -145,22 +158,22 @@ let createModel coefficients = simulation {
 
   let secondServerLoad =
     Server.processingTime secondServer
-    |> Eventive.map (fun time ->
+    |> Eventive.map(fun time ->
       (SamplingStats.mean time) * coefficients.BranchProbability / coefficients.StreamDelay
     ) |> Eventive.run
 
   let thirdServerLoad =
     Server.processingTime thirdServer
-    |> Eventive.map (fun time ->
+    |> Eventive.map(fun time ->
       (SamplingStats.mean time) * (1.0 - coefficients.BranchProbability) / coefficients.StreamDelay
     ) |> Eventive.run
-  
+
   let arrivalVarianceCoefficient =
     ArrivalTimer.processingTime arrivalTimer
     |> Eventive.map (fun time ->
       (SamplingStats.deviation time) / (SamplingStats.mean time)
     ) |> Eventive.run
-  
+
   return [
     ResultSource.From("queue 1", firstQueue)
     ResultSource.From("queue 2", secondQueue)

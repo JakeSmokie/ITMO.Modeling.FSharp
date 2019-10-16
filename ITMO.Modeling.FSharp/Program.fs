@@ -2,6 +2,7 @@
 
 open ITMO.Modeling.FSharp
 
+open System
 open Simulation.Aivika
 open Simulation.Aivika.Results
 open Simulation.Aivika.Experiments
@@ -64,7 +65,7 @@ let main _ =
     chartWithStats firstServerLoad
     chartWithStats secondServerLoad
     chartWithStats thirdServerLoad
-    
+
     chartWithStats firstServerTime
     chartWithStats secondServerTime
     chartWithStats thirdServerTime
@@ -79,17 +80,20 @@ let main _ =
 
   let defaultCoefficients =
     Coefficients.personCoefficients
+
+  let all =
+    [
+      defaultCoefficients
+      {defaultCoefficients with ChannelsCount = defaultCoefficients.ChannelsCount * 2}
+      {defaultCoefficients with ChannelsCount = 1}
+    ] |> List.collect (fun c -> [c; {c with WithConstAndUniform = true}])
+
+  List.iter (printfn "%A") all
+  Console.ReadLine() |> ignore
+
+  List.iter (fun coefficients ->
+    experiment.RenderHtml(SimpleModel.createModel coefficients, providers)
+    |> Async.RunSynchronously
+  ) all
   
-  let coefficientsWithIncreasedChannels =
-    { defaultCoefficients with ChannelsCount = defaultCoefficients.ChannelsCount * 2 }
-
-  let coefficientsWithDecreasedChannels =
-    { defaultCoefficients with ChannelsCount = 1 }
-
-  let coefficients = defaultCoefficients
-  
-  experiment.RenderHtml(SimpleModel.createModel coefficients, providers)
-  |> Async.RunSynchronously
-
-  printfn "%A" coefficients
   0
