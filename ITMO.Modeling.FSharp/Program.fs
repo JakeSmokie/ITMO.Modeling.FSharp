@@ -41,6 +41,7 @@ let main _ =
   let thirdSectionTime = ResultSet.findByName "queue + server 3 time"
 
   let arrivalTimer = ResultSet.findByName "arrivalTimer"
+  let arrivalTimerVC = ResultSet.findByName "arrivalTimerVC"
 
   let firstServerLoad = ResultSet.findByName "server 1 load"
   let secondServerLoad = ResultSet.findByName "server 2 load"
@@ -73,6 +74,7 @@ let main _ =
     chartWithStats thirdSectionTime
 
     ExperimentProvider.arrivalTimer arrivalTimer
+    chartWithStats arrivalTimerVC
   ]
 
   experiment.RenderHtml(SimpleModel.createModel Coefficients.personCoefficients, providers)

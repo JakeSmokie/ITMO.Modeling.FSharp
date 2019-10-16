@@ -155,6 +155,12 @@ let createModel coefficients = simulation {
       (SamplingStats.mean time) * (1.0 - coefficients.BranchProbability) / coefficients.StreamDelay
     ) |> Eventive.run
   
+  let arrivalVarianceCoefficient =
+    ArrivalTimer.processingTime arrivalTimer
+    |> Eventive.map (fun time ->
+      (SamplingStats.deviation time) / (SamplingStats.mean time)
+    ) |> Eventive.run
+  
   return [
     ResultSource.From("queue 1", firstQueue)
     ResultSource.From("queue 2", secondQueue)
@@ -180,6 +186,7 @@ let createModel coefficients = simulation {
     ResultSource.From("queue + server 3 time", thirdSectionTime)
 
     ResultSource.From("arrivalTimer", arrivalTimer)
+    ResultSource.From("arrivalTimerVC", arrivalVarianceCoefficient)
   ] |> ResultSet.create
  }
 
