@@ -16,7 +16,7 @@ let specs = {
 }
 
 let createModel coefficients = simulation {
-  let inputStream = Stream.randomExponential coefficients.StreamComingTime
+  let inputStream = Stream.randomExponential coefficients.StreamDelay
 
   let! firstQueue =
     InfiniteQueue.createUsingFCFS
@@ -139,10 +139,22 @@ let createModel coefficients = simulation {
   let firstServerLoad =
     firstServer |> List.map (fun server ->
       Server.processingTime server
-      |> Eventive.map (fun time -> (SamplingStats.mean time) / coefficients.StreamComingTime)
+      |> Eventive.map (fun time -> (SamplingStats.mean time) / coefficients.StreamDelay)
       |> Eventive.run
     )
 
+  let secondServerLoad =
+    Server.processingTime secondServer
+    |> Eventive.map (fun time ->
+      (SamplingStats.mean time) * coefficients.BranchProbability / coefficients.StreamDelay
+    ) |> Eventive.run
+
+  let thirdServerLoad =
+    Server.processingTime thirdServer
+    |> Eventive.map (fun time ->
+      (SamplingStats.mean time) * (1.0 - coefficients.BranchProbability) / coefficients.StreamDelay
+    ) |> Eventive.run
+  
   return [
     ResultSource.From("queue 1", firstQueue)
     ResultSource.From("queue 2", secondQueue)
@@ -156,6 +168,8 @@ let createModel coefficients = simulation {
     ResultSource.From("server 3", thirdServer)
 
     ResultSource.From("server 1 load", firstServerLoad)
+    ResultSource.From("server 2 load", secondServerLoad)
+    ResultSource.From("server 3 load", thirdServerLoad)
 
     ResultSource.From("server 1 time", firstServerTime)
     ResultSource.From("server 2 time", secondServerTime)

@@ -43,6 +43,8 @@ let main _ =
   let arrivalTimer = ResultSet.findByName "arrivalTimer"
 
   let firstServerLoad = ResultSet.findByName "server 1 load"
+  let secondServerLoad = ResultSet.findByName "server 2 load"
+  let thirdServerLoad = ResultSet.findByName "server 3 load"
 
   let providers = [
     ExperimentProvider.experimentSpecs
@@ -59,6 +61,8 @@ let main _ =
     ExperimentProvider.server thirdServer
 
     chartWithStats firstServerLoad
+    chartWithStats secondServerLoad
+    chartWithStats thirdServerLoad
     
     chartWithStats firstServerTime
     chartWithStats secondServerTime

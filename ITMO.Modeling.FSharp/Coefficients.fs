@@ -13,7 +13,7 @@ let person = {
 type Coefficients = {
   ChannelsCount: int
   WorkTime: float
-  StreamComingTime: float
+  StreamDelay: float
   BranchProbability: float
   Capacity2: int
   Capacity3: int
@@ -28,7 +28,7 @@ let getCoefficientsForPerson person =
   {
     ChannelsCount = channelsCount
     WorkTime = float a
-    StreamComingTime = (float a) / ((float channelsCount) * 0.9)
+    StreamDelay = (float a) / ((float channelsCount) * 0.9)
     BranchProbability = (float a) / (float a + float b)
     Capacity2 = 3 + a % 5
     Capacity3 = 6 - a % 5
