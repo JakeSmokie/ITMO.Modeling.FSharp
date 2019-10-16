@@ -2,6 +2,7 @@
 
 open ITMO.Modeling.FSharp
 
+open ITMO.Modeling.FSharp.Coefficients
 open System
 open Simulation.Aivika
 open Simulation.Aivika.Results
@@ -20,7 +21,7 @@ let main _ =
   let experiment = Experiment()
 
   experiment.Specs <- SimpleModel.specs
-  experiment.RunCount <- 100
+  experiment.RunCount <- 10
 
   let firstQueue = ResultSet.findByName "queue 1"
   let secondQueue = ResultSet.findByName "queue 2"
@@ -86,7 +87,14 @@ let main _ =
       defaultCoefficients
       {defaultCoefficients with ChannelsCount = defaultCoefficients.ChannelsCount * 2}
       {defaultCoefficients with ChannelsCount = 1}
-    ] |> List.collect (fun c -> [c; {c with WithConstAndUniform = true}])
+    ] |> List.collect (fun c ->
+      [
+       {c with Distributions = BothExponential}
+       {c with Distributions = ConstAndUniform}
+       {c with Distributions = ErlangAndUniform}
+       {c with Distributions = ErlandAndHyper}
+      ]
+    )
 
   List.iter (printfn "%A") all
   Console.ReadLine() |> ignore
@@ -95,5 +103,5 @@ let main _ =
     experiment.RenderHtml(SimpleModel.createModel coefficients, providers)
     |> Async.RunSynchronously
   ) all
-  
+
   0

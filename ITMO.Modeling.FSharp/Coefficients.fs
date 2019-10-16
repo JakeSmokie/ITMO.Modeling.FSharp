@@ -10,6 +10,12 @@ let person = {
   Name = "Иван"
 }
 
+type Distributions =
+  | BothExponential
+  | ConstAndUniform
+  | ErlangAndUniform
+  | ErlandAndHyper
+
 type Coefficients = {
   ChannelsCount: int
   WorkTime: float
@@ -18,7 +24,7 @@ type Coefficients = {
   Capacity2: int
   Capacity3: int
 
-  WithConstAndUniform: bool
+  Distributions: Distributions
   VC: float
 }
 
@@ -36,7 +42,7 @@ let getCoefficientsForPerson person =
     Capacity2 = 3 + a % 5
     Capacity3 = 6 - a % 5
   
-    WithConstAndUniform = false
+    Distributions = BothExponential
     VC = 0.3
   }
 

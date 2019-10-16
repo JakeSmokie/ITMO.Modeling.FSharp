@@ -8,7 +8,7 @@ open Simulation.Aivika.Results
 
 let specs = {
   StartTime = 0.0
-  StopTime = 1200.0
+  StopTime = 2000.0
   DT = 0.1
   Method = RungeKutta4
   GeneratorType = StrongGenerator
@@ -28,22 +28,32 @@ let createModel coefficients = simulation {
 
   let! secondQueue = Queue.createUsingFCFS coefficients.Capacity2 |> Eventive.runInStartTime
   let! secondServer =
-    if not coefficients.WithConstAndUniform
-    then Server.createRandomExponential coefficients.WorkTime
-    else Server.create (fun a -> proc {
+    match coefficients.Distributions with
+    | BothExponential ->
+      Server.createRandomExponential coefficients.WorkTime
+    | ConstAndUniform ->
+      Server.create (fun a -> proc {
            do! Proc.hold coefficients.WorkTime
            return a
          })
-
+    | ErlangAndUniform | ErlandAndHyper ->
+      let m = 2
+      let beta = float 2 / coefficients.WorkTime
+      
+      Server.createRandomErlang beta m
+      
   let! thirdQueue = Queue.createUsingFCFS coefficients.Capacity3 |> Eventive.runInStartTime
   let! thirdServer =
-    if not coefficients.WithConstAndUniform
-    then Server.createRandomExponential coefficients.WorkTime
-    else
+    match coefficients.Distributions with
+    | BothExponential ->
+      Server.createRandomExponential coefficients.WorkTime
+    | ConstAndUniform | ErlangAndUniform ->
       let mean = coefficients.WorkTime
       let vc = (sqrt 3.0) * coefficients.VC
       
       Server.createRandomUniform (mean * (1.0 - vc)) (mean * (1.0 + vc))
+    | ErlandAndHyper ->
+      Server.createRandomExponential coefficients.WorkTime
   
   let! arrivalTimer = ArrivalTimer.create
 
