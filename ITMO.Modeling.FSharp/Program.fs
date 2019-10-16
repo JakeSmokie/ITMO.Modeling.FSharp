@@ -19,7 +19,7 @@ let main _ =
   let experiment = Experiment()
 
   experiment.Specs <- SimpleModel.specs
-  experiment.RunCount <- 20
+  experiment.RunCount <- 100
 
   let firstQueue = ResultSet.findByName "queue 1"
   let secondQueue = ResultSet.findByName "queue 2"
@@ -77,8 +77,19 @@ let main _ =
     chartWithStats arrivalTimerVC
   ]
 
-  experiment.RenderHtml(SimpleModel.createModel Coefficients.personCoefficients, providers)
+  let defaultCoefficients =
+    Coefficients.personCoefficients
+  
+  let coefficientsWithIncreasedChannels =
+    { defaultCoefficients with ChannelsCount = defaultCoefficients.ChannelsCount * 2 }
+
+  let coefficientsWithDecreasedChannels =
+    { defaultCoefficients with ChannelsCount = 1 }
+
+  let coefficients = defaultCoefficients
+  
+  experiment.RenderHtml(SimpleModel.createModel coefficients, providers)
   |> Async.RunSynchronously
 
-  printfn "%A" Coefficients.personCoefficients
+  printfn "%A" coefficients
   0
