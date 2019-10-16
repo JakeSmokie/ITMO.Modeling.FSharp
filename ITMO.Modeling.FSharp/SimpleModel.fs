@@ -3,6 +3,7 @@
 open ITMO.Modeling.FSharp.Coefficients
 
 open Simulation.Aivika
+open Simulation.Aivika
 open Simulation.Aivika.Queues
 open Simulation.Aivika.Results
 
@@ -80,30 +81,36 @@ let createModel coefficients = simulation {
   let firstSectionTime =
     firstQueue
     |> InfiniteQueue.waitTime
-    |> Eventive.map (fun x -> eventive {
+    |> Eventive.map (fun waitTime -> eventive {
       let! firstServerTime =
         firstServerTime
         |> Eventive.ofList
         |> Eventive.map (List.fold SamplingStats.append SamplingStats.emptyFloats)
 
-      return SamplingStats.append x firstServerTime
-    }) |> Eventive.concat
+      return (SamplingStats.mean firstServerTime) + (SamplingStats.mean waitTime)
+    })
+    |> Eventive.concat
+    |> Eventive.run
 
   let secondSectionTime =
     secondQueue
     |> Queue.waitTime
-    |> Eventive.map (fun x -> eventive {
+    |> Eventive.map (fun waitTime -> eventive {
       let! time = secondServerTime
-      return SamplingStats.append x time
-    }) |> Eventive.concat
+      return (SamplingStats.mean time) + (SamplingStats.mean waitTime)
+    })
+    |> Eventive.concat
+    |> Eventive.run
 
   let thirdSectionTime =
     thirdQueue
     |> Queue.waitTime
-    |> Eventive.map (fun x -> eventive {
+    |> Eventive.map (fun waitTime -> eventive {
       let! time = thirdServerTime
-      return SamplingStats.append x time
-    }) |> Eventive.concat
+      return (SamplingStats.mean time) + (SamplingStats.mean waitTime)
+    })
+    |> Eventive.concat
+    |> Eventive.run
 
   let secondQueueLossProb =
     Queue.lostCount secondQueue
@@ -129,27 +136,36 @@ let createModel coefficients = simulation {
     |> Eventive.concat
     |> Eventive.run
 
+  let firstServerLoad =
+    firstServer |> List.map (fun server ->
+      Server.processingTime server
+      |> Eventive.map (fun time -> (SamplingStats.mean time) / coefficients.StreamComingTime)
+      |> Eventive.run
+    )
+
   return [
-    ResultSource.From("queue 1", firstQueue, "Queue no. 1")
-    ResultSource.From("queue 2", secondQueue, "Queue no. 2")
-    ResultSource.From("queue 3", thirdQueue, "Queue no. 3")
+    ResultSource.From("queue 1", firstQueue)
+    ResultSource.From("queue 2", secondQueue)
+    ResultSource.From("queue 3", thirdQueue)
 
-    ResultSource.From("queue 2 loss prob", secondQueueLossProb, "Queue no. 2")
-    ResultSource.From("queue 3 loss prob", thirdQueueLossProb, "Queue no. 3")
+    ResultSource.From("queue 2 loss prob", secondQueueLossProb)
+    ResultSource.From("queue 3 loss prob", thirdQueueLossProb)
 
-    ResultSource.From("server 1", firstServer, "Work Station no. 1")
-    ResultSource.From("server 2", secondServer, "Work Station no. 2")
-    ResultSource.From("server 3", thirdServer, "Work Station no. 3")
+    ResultSource.From("server 1", firstServer)
+    ResultSource.From("server 2", secondServer)
+    ResultSource.From("server 3", thirdServer)
 
-    ResultSource.From("server 1 time", firstServerTime, "Work Station no. 1")
-    ResultSource.From("server 2 time", secondServerTime, "Work Station no. 2")
-    ResultSource.From("server 3 time", thirdServerTime, "Work Station no. 3")
+    ResultSource.From("server 1 load", firstServerLoad)
 
-    ResultSource.From("queue + server 1 time", firstSectionTime, "Work Station no. 1")
-    ResultSource.From("queue + server 2 time", secondSectionTime, "Work Station no. 2")
-    ResultSource.From("queue + server 3 time", thirdSectionTime, "Work Station no. 3")
+    ResultSource.From("server 1 time", firstServerTime)
+    ResultSource.From("server 2 time", secondServerTime)
+    ResultSource.From("server 3 time", thirdServerTime)
 
-    ResultSource.From("arrivalTimer", arrivalTimer, "The arrival timer")
+    ResultSource.From("queue + server 1 time", firstSectionTime)
+    ResultSource.From("queue + server 2 time", secondSectionTime)
+    ResultSource.From("queue + server 3 time", thirdSectionTime)
+
+    ResultSource.From("arrivalTimer", arrivalTimer)
   ] |> ResultSet.create
  }
 

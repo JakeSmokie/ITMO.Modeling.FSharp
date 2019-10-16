@@ -8,12 +8,18 @@ open Simulation.Aivika.Experiments
 open Simulation.Aivika.Experiments.Web
 open Simulation.Aivika.Charting.Web
 
+let chartWithStats rs =
+  [
+    ExperimentProvider.deviationChart rs
+    ExperimentProvider.lastValueStats rs
+  ] |> ExperimentProvider.concat
+
 [<EntryPoint>]
 let main _ =
   let experiment = Experiment()
 
   experiment.Specs <- SimpleModel.specs
-  experiment.RunCount <- 100
+  experiment.RunCount <- 20
 
   let firstQueue = ResultSet.findByName "queue 1"
   let secondQueue = ResultSet.findByName "queue 2"
@@ -36,6 +42,8 @@ let main _ =
 
   let arrivalTimer = ResultSet.findByName "arrivalTimer"
 
+  let firstServerLoad = ResultSet.findByName "server 1 load"
+
   let providers = [
     ExperimentProvider.experimentSpecs
 
@@ -43,31 +51,22 @@ let main _ =
     ExperimentProvider.queue secondQueue
     ExperimentProvider.queue thirdQueue
 
-    ExperimentProvider.deviationChart secondQueueLossProb
-    ExperimentProvider.deviationChart thirdQueueLossProb
-
-    ExperimentProvider.lastValueStats secondQueueLossProb
-    ExperimentProvider.lastValueStats thirdQueueLossProb
+    chartWithStats secondQueueLossProb
+    chartWithStats thirdQueueLossProb
 
     ExperimentProvider.server firstServer
     ExperimentProvider.server secondServer
     ExperimentProvider.server thirdServer
 
-    ExperimentProvider.deviationChart firstServerTime
-    ExperimentProvider.deviationChart secondServerTime
-    ExperimentProvider.deviationChart thirdServerTime
+    chartWithStats firstServerLoad
+    
+    chartWithStats firstServerTime
+    chartWithStats secondServerTime
+    chartWithStats thirdServerTime
 
-    ExperimentProvider.lastValueStats firstServerTime
-    ExperimentProvider.lastValueStats secondServerTime
-    ExperimentProvider.lastValueStats thirdServerTime
-
-    ExperimentProvider.deviationChart firstSectionTime
-    ExperimentProvider.deviationChart secondSectionTime
-    ExperimentProvider.deviationChart thirdSectionTime
-
-    ExperimentProvider.lastValueStats firstSectionTime
-    ExperimentProvider.lastValueStats secondSectionTime
-    ExperimentProvider.lastValueStats thirdSectionTime
+    chartWithStats firstSectionTime
+    chartWithStats secondSectionTime
+    chartWithStats thirdSectionTime
 
     ExperimentProvider.arrivalTimer arrivalTimer
   ]
