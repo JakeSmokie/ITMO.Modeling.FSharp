@@ -14,7 +14,7 @@ type Distributions =
   | BothExponential
   | ConstAndUniform
   | ErlangAndUniform
-  | ErlandAndHyper
+  | ErlangAndHyper
 
 type Coefficients = {
   ChannelsCount: int

@@ -21,7 +21,7 @@ let main _ =
   let experiment = Experiment()
 
   experiment.Specs <- SimpleModel.specs
-  experiment.RunCount <- 10
+  experiment.RunCount <- 100
 
   let firstQueue = ResultSet.findByName "queue 1"
   let secondQueue = ResultSet.findByName "queue 2"
@@ -79,24 +79,26 @@ let main _ =
     chartWithStats arrivalTimerVC
   ]
 
-  let defaultCoefficients =
+  let coefficients =
     Coefficients.personCoefficients
 
   let all =
     [
-      defaultCoefficients
-      {defaultCoefficients with ChannelsCount = defaultCoefficients.ChannelsCount * 2}
-      {defaultCoefficients with ChannelsCount = 1}
+      coefficients
+      {coefficients with ChannelsCount = coefficients.ChannelsCount * 2}
+      {coefficients with ChannelsCount = 1}
     ] |> List.collect (fun c ->
       [
        {c with Distributions = BothExponential}
        {c with Distributions = ConstAndUniform}
        {c with Distributions = ErlangAndUniform}
-       {c with Distributions = ErlandAndHyper}
+       {c with Distributions = ErlangAndHyper}
       ]
     )
 
   List.iter (printfn "%A") all
+  
+  printfn "!!! Print any key to continue..."
   Console.ReadLine() |> ignore
 
   List.iter (fun coefficients ->

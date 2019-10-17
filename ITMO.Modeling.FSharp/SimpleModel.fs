@@ -8,7 +8,7 @@ open Simulation.Aivika.Results
 
 let specs = {
   StartTime = 0.0
-  StopTime = 2000.0
+  StopTime = 1200.0
   DT = 0.1
   Method = RungeKutta4
   GeneratorType = StrongGenerator
@@ -36,7 +36,7 @@ let createModel coefficients = simulation {
            do! Proc.hold coefficients.WorkTime
            return a
          })
-    | ErlangAndUniform | ErlandAndHyper ->
+    | ErlangAndUniform | ErlangAndHyper ->
       let m = 2
       let beta = float 2 / coefficients.WorkTime
       
@@ -52,8 +52,23 @@ let createModel coefficients = simulation {
       let vc = (sqrt 3.0) * coefficients.VC
       
       Server.createRandomUniform (mean * (1.0 - vc)) (mean * (1.0 + vc))
-    | ErlandAndHyper ->
-      Server.createRandomExponential coefficients.WorkTime
+    | ErlangAndHyper ->
+      Server.create (fun x -> proc {        
+        let vc = 2.0
+        
+        let maxProb = 2.0 / (1.0 + vc ** 2.0)
+        let! prob = Parameter.randomUniform 0.0 maxProb |> Parameter.lift
+        let! first = Parameter.randomTrue prob |> Parameter.lift
+
+        let mean = coefficients.WorkTime
+        let mean =
+          if first
+          then mean * (1.0 + sqrt ((1.0 - prob) / (2.0 * prob) * (vc ** 2.0 - 1.0)))
+          else mean * (1.0 + sqrt (prob / (2.0 * (1.0 - prob)) * (vc ** 2.0 - 1.0)))
+          
+        do! Proc.randomExponential_ mean
+        return x
+      })
   
   let! arrivalTimer = ArrivalTimer.create
 
