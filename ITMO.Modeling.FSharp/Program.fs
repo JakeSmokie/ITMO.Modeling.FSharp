@@ -97,9 +97,6 @@ let main _ =
     )
 
   List.iter (printfn "%A") all
-  
-  printfn "!!! Print any key to continue..."
-  Console.ReadLine() |> ignore
 
   List.iter (fun coefficients ->
     experiment.RenderHtml(SimpleModel.createModel coefficients, providers)
