@@ -39,9 +39,9 @@ let createModel coefficients = simulation {
     | ErlangAndUniform | ErlangAndHyper ->
       let m = 2
       let beta = float 2 / coefficients.WorkTime
-      
+
       Server.createRandomErlang beta m
-      
+
   let! thirdQueue = Queue.createUsingFCFS coefficients.Capacity3 |> Eventive.runInStartTime
   let! thirdServer =
     match coefficients.Distributions with
@@ -50,12 +50,12 @@ let createModel coefficients = simulation {
     | ConstAndUniform | ErlangAndUniform ->
       let mean = coefficients.WorkTime
       let vc = (sqrt 3.0) * coefficients.VC
-      
+
       Server.createRandomUniform (mean * (1.0 - vc)) (mean * (1.0 + vc))
     | ErlangAndHyper ->
-      Server.create (fun x -> proc {        
+      Server.create (fun x -> proc {
         let vc = 2.0
-        
+
         let maxProb = 2.0 / (1.0 + vc ** 2.0)
         let! prob = Parameter.randomUniform 0.0 maxProb |> Parameter.lift
         let! first = Parameter.randomTrue prob |> Parameter.lift
@@ -65,11 +65,11 @@ let createModel coefficients = simulation {
           if first
           then mean * (1.0 + sqrt ((1.0 - prob) / (2.0 * prob) * (vc ** 2.0 - 1.0)))
           else mean * (1.0 + sqrt (prob / (2.0 * (1.0 - prob)) * (vc ** 2.0 - 1.0)))
-          
+
         do! Proc.randomExponential_ mean
         return x
       })
-  
+
   let! arrivalTimer = ArrivalTimer.create
 
   do! (proc {
