@@ -75,10 +75,10 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Base.fs" />
     <Compile Include="AnalyticModel.fs" />
-    <Compile Include="Model.fs" />
-    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="ComplexModel.fs" />
     <Compile Include="Program.fs" />
     <Content Include="packages.config" />
   </ItemGroup>

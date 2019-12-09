@@ -2,5 +2,6 @@
 
 [<EntryPoint>]
 let main argv =
-  AnalyticModel.run()
+//  AnalyticModel.run()
+  ComplexModel.run()
   0

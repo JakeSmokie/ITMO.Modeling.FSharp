@@ -7,10 +7,10 @@ open Simulation.Aivika.Charting.Gtk.Web
 open Simulation.Aivika.Experiments
 open Simulation.Aivika.Results
 
-let streamDelay = day / 4.
-let hrProbabilty = 0.7
-let serveTime = 30.
-let runCount = 1000
+let streamDelay = days 1 / 100.0
+let hrProbability = 0.7
+let serveTime = 30.0
+let runCount = 100
 
 let specs = {
   StartTime = 0.0
@@ -24,16 +24,16 @@ let model = simulation {
   let! timer = ArrivalTimer.create
   let stream = Stream.randomExponential streamDelay
 
-  let! firstHRQueue = infiniteQueue() 
-  let! firstManagersQueue = infiniteQueue()
+  let! firstHRQueue = queue
+  let! firstManagersQueue = queue
 
-  let! firstManagersServer = parallelServer Server.createRandomExponential serveTime 3
-  let! firstHRServer = parallelServer Server.createRandomExponential serveTime 3
+  let! firstManagersServer = createServer Server.createRandomExponential serveTime 3
+  let! firstHRServer = createServer Server.createRandomExponential serveTime 3
 
   // Choice
   do! (proc {
     for x in stream do
-      let! hr = Parameter.lift ^ Parameter.randomTrue hrProbabilty 
+      let! hr = Parameter.lift ^ Parameter.randomTrue hrProbability 
 
       do! if hr then firstHRQueue else firstManagersQueue
           |> InfiniteQueue.enqueue x
@@ -41,14 +41,14 @@ let model = simulation {
   } |> Proc.runInStartTime)
   
   do!
-    asStream firstManagersQueue
-    |> parServerProcessor firstManagersServer
+    dequeue firstManagersQueue
+    |> serve firstManagersServer
     |> ArrivalTimer.processor timer
     |> run
     
   do!
-    asStream firstHRQueue
-    |> parServerProcessor firstHRServer
+    dequeue firstHRQueue
+    |> serve firstHRServer
     |> ArrivalTimer.processor timer
     |> run
   
