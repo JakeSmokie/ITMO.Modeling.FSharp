@@ -45,9 +45,9 @@ let createModel coefficients = simulation {
   let! thirdQueue = Queue.createUsingFCFS coefficients.Capacity3 |> Eventive.runInStartTime
   let! thirdServer =
     match coefficients.Distributions with
-    | BothExponential ->
+    | BothExponential | ErlangAndUniform ->
       Server.createRandomExponential coefficients.WorkTime
-    | ConstAndUniform | ErlangAndUniform ->
+    | ConstAndUniform ->
       let mean = coefficients.WorkTime
       let vc = (sqrt 3.0) * coefficients.VC
 

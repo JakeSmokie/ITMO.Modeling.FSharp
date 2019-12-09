@@ -5,10 +5,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{E113ED9E-2D09-4D89-9802-C86D53D97F34}</ProjectGuid>
+    <ProjectGuid>{7503E4AA-56C3-416A-BCF0-E9CF2E2CEF12}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>ITMO.Modeling.FSharp</RootNamespace>
-    <AssemblyName>ITMO.Modeling.FSharp</AssemblyName>
+    <RootNamespace>ITMO.Modeling.CourseWork</RootNamespace>
+    <AssemblyName>ITMO.Modeling.CourseWork</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <DocumentationFile>bin\$(Configuration)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
@@ -32,12 +33,29 @@
     <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CairoSharp, Version=3.22.25.56, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\CairoSharp.3.22.25.56\lib\netstandard2.0\CairoSharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="GioSharp, Version=3.22.25.56, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\GioSharp.3.22.25.56\lib\netstandard2.0\GioSharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="GLibSharp, Version=3.22.25.56, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\GLibSharp.3.22.25.56\lib\netstandard2.0\GLibSharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="mscorlib" />
+    <Reference Include="PangoSharp, Version=3.22.25.56, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\PangoSharp.3.22.25.56\lib\netstandard2.0\PangoSharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Simulation.Aivika, Version=3.1.17.0, Culture=neutral, PublicKeyToken=ffda750bb6866fdd">
       <HintPath>..\packages\Simulation.Aivika.3.1.17.0\lib\net45\Simulation.Aivika.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Simulation.Aivika.Charting, Version=3.1.17.0, Culture=neutral, PublicKeyToken=ffda750bb6866fdd">
-      <HintPath>..\packages\Simulation.Aivika.Charting.3.1.17.0\lib\net45\Simulation.Aivika.Charting.dll</HintPath>
+    <Reference Include="Simulation.Aivika.Charting.Gtk, Version=3.1.17.0, Culture=neutral, PublicKeyToken=ffda750bb6866fdd">
+      <HintPath>..\packages\Simulation.Aivika.Charting.Gtk.3.1.17.0\lib\net45\Simulation.Aivika.Charting.Gtk.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Simulation.Aivika.Experiments, Version=3.1.17.0, Culture=neutral, PublicKeyToken=ffda750bb6866fdd">
@@ -51,17 +69,18 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <Reference Include="System.Web" />
     <Reference Include="FSharp.Core">
       <HintPath>..\packages\FSharp.Core.4.5.2\lib\net45\FSharp.Core.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Base.fs" />
+    <Compile Include="AnalyticModel.fs" />
+    <Compile Include="Model.fs" />
     <Compile Include="AssemblyInfo.fs" />
-    <Content Include="packages.config" />
-    <Compile Include="Coefficients.fs" />
-    <Compile Include="SimpleModel.fs" />
     <Compile Include="Program.fs" />
+    <Content Include="packages.config" />
   </ItemGroup>
   <Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')" />
 </Project>

@@ -21,7 +21,7 @@ let main _ =
   let experiment = Experiment()
 
   experiment.Specs <- SimpleModel.specs
-  experiment.RunCount <- 100
+  experiment.RunCount <- 1
 
   let firstQueue = ResultSet.findByName "queue 1"
   let secondQueue = ResultSet.findByName "queue 2"
@@ -85,14 +85,14 @@ let main _ =
   let all =
     [
       coefficients
-      {coefficients with ChannelsCount = coefficients.ChannelsCount * 2}
-      {coefficients with ChannelsCount = 1}
+//      {coefficients with ChannelsCount = coefficients.ChannelsCount * 2}
+//      {coefficients with ChannelsCount = 1}
     ] |> List.collect (fun c ->
       [
-       {c with Distributions = BothExponential}
-       {c with Distributions = ConstAndUniform}
+//       {c with Distributions = BothExponential}
+//       {c with Distributions = ConstAndUniform}
        {c with Distributions = ErlangAndUniform}
-       {c with Distributions = ErlangAndHyper}
+//       {c with Distributions = ErlangAndHyper}
       ]
     )
 

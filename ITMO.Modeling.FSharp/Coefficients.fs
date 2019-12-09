@@ -6,8 +6,8 @@ type Person = {
 }
 
 let person = {
-  Surname = "Айгузин"
-  Name = "Иван"
+  Surname = ""
+  Name = ""
 }
 
 type Distributions =
