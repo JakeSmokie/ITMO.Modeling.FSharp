@@ -1,5 +1,6 @@
 module ITMO.Modeling.CourseWork.ComplexModel
 
+open System
 open Simulation.Aivika
 open Simulation.Aivika.Charting.Gtk.Web
 open Simulation.Aivika.Experiments
@@ -7,16 +8,17 @@ open Simulation.Aivika.Experiments.Web
 open Simulation.Aivika.Results
 open ITMO.Modeling.CourseWork.Base
 
-let cvPerDay = 4.
+let cvPerDay = 200.
 let streamDelay = days 1 / cvPerDay
 
 let hrChoiceProbability = 0.7
 let cvTransferServingTime = minutes 30
 
-let managersAmount = 40
-let hrAmount = 4
+let managersAmount = 2
+let hrAmount = 3
 
-let successProbabilty = 0.9
+let successProbabilty = 0.698827
+let secondInterviewProbability = 0.2
 
 let model = simulation {
   let! timer = ArrivalTimer.create
@@ -33,7 +35,7 @@ let model = simulation {
   let! successQueue = queue
   
   let! managers = createServer managersAmount ^ fun _ -> Server.createRandomExponential cvTransferServingTime
-  let! recruiters = createServer hrAmount ^ fun _ -> Server.createRandomExponential cvTransferServingTime
+  let! recruiters = createServer hrAmount ^ fun _ -> Server.createRandomExponential 10.
 
   // Util
   let try_ success prob = choose success failureQueue prob
@@ -66,7 +68,7 @@ let model = simulation {
     dequeue firstHRQueue
     |> serve recruiters
     |> serve delay
-    |> try_ secondManagersQueue successProbabilty
+    |> try_ secondManagersQueue 0.1
     |> run
   
   let! delay = createServer 10000 ^ fun _ -> Server.createRandomExponential ^ days 1  
@@ -95,9 +97,10 @@ let model = simulation {
     |> serve recruiters
     |> serve managers
     |> serve delay
+    |> try_ successQueue successProbabilty
     |> Processor.arrc ^ fun x -> proc {
       let! success = Parameter.lift ^ Parameter.randomTrue successProbabilty
-      let! secondInterview = Parameter.lift ^ Parameter.randomTrue successProbabilty
+      let! secondInterview = Parameter.lift ^ Parameter.randomTrue secondInterviewProbability
 
       let queue =
         if not success then
@@ -120,9 +123,9 @@ let model = simulation {
 
   do!
     dequeue secondInterviewQueue
+    |> serve delay
     |> serve recruiters
     |> serve managers
-    |> serve delay
     |> try_ successQueue successProbabilty
     |> run
   
@@ -159,18 +162,17 @@ let model = simulation {
 
 let specs = {
   StartTime = 0.0
-  StopTime = days 365
+  StopTime = days 365 * 5.
   DT = minutes 1
   Method = RungeKutta4
   GeneratorType = StrongGenerator
 }
 
-let runCount = 1
 let run() =
   let experiment = Experiment()
 
   experiment.Specs <- specs
-  experiment.RunCount <- runCount
+  experiment.RunCount <- 4
 
   let firstManagersQueue = ResultSet.findByName "firstManagersQueue"
   let firstHRQueue = ResultSet.findByName "firstHRQueue"
@@ -198,12 +200,11 @@ let run() =
     ExperimentProvider.infiniteQueue secondHRQueue
     ExperimentProvider.infiniteQueue firstInterviewQueue
     ExperimentProvider.infiniteQueue secondInterviewQueue
-//    ExperimentProvider.infiniteQueue failureQueue
-//    ExperimentProvider.infiniteQueue successQueue
     
     serverProvider firstHRServer
     serverProvider firstManagersServer    
   ]
-  
+    
   experiment.RenderHtml(model, providers)
   |> Async.RunSynchronously
+  

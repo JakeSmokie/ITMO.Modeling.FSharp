@@ -7,14 +7,14 @@ open Simulation.Aivika.Charting.Gtk.Web
 open Simulation.Aivika.Experiments
 open Simulation.Aivika.Results
 
-let streamDelay = days 1 / 100.0
+let streamDelay = days 1 / 4.
 let hrProbability = 0.7
 let serveTime = 30.0
-let runCount = 100
+let runCount = 400
 
 let specs = {
   StartTime = 0.0
-  StopTime = 1440. * 14.
+  StopTime = days 30
   DT = 1.
   Method = RungeKutta4
   GeneratorType = StrongGenerator
