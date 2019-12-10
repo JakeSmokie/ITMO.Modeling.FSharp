@@ -1,6 +1,10 @@
 module ITMO.Modeling.CourseWork.Base
 
 open Simulation.Aivika
+open Simulation.Aivika.Charting.Gtk.Web
+open Simulation.Aivika.Experiments
+open Simulation.Aivika.Experiments.Web
+open Simulation.Aivika.Results
 
 let (^) f x = f x
 
@@ -8,8 +12,8 @@ let minutes x = float x
 let hours x = minutes 60 * float x
 let days x = hours 24 * float x
 
-let createServer method serveTime amount =
-  fun _ -> method serveTime
+let createServer amount method =
+  method
   |> List.init amount
   |> Simulation.ofList
 
@@ -42,3 +46,12 @@ let choose trueQueue falseQueue prob =
     
     return x
   }
+
+let serverProvider series =
+  let series1 = series >> ResultSet.findById ServerProcessingFactorId
+
+  [
+    ExperimentProvider.deviationChart series1
+    ExperimentProvider.lastValueStats series1
+    ExperimentProvider.lastValueHistogram series1
+  ] |> ExperimentProvider.concat

@@ -27,8 +27,8 @@ let model = simulation {
   let! firstHRQueue = queue
   let! firstManagersQueue = queue
 
-  let! firstManagersServer = createServer Server.createRandomExponential serveTime 3
-  let! firstHRServer = createServer Server.createRandomExponential serveTime 3
+  let! firstManagersServer = createServer 3 ^ fun _ -> Server.createRandomExponential serveTime
+  let! firstHRServer = createServer 3 ^ fun _ -> Server.createRandomExponential serveTime
 
   // Choice
   do! (proc {

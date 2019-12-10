@@ -3,89 +3,101 @@ module ITMO.Modeling.CourseWork.ComplexModel
 open Simulation.Aivika
 open Simulation.Aivika.Charting.Gtk.Web
 open Simulation.Aivika.Experiments
+open Simulation.Aivika.Experiments.Web
 open Simulation.Aivika.Results
 open ITMO.Modeling.CourseWork.Base
-open Simulation.Aivika.Experiments.Web
 
-let streamDelay = days 1 / 4.
-let cvTransferServingTime = minutes 10
+let cvPerDay = 4.
+let streamDelay = days 1 / cvPerDay
 
-let managersAmount = 100
+let hrChoiceProbability = 0.7
+let cvTransferServingTime = minutes 30
+
+let managersAmount = 40
 let hrAmount = 4
+
+let successProbabilty = 0.9
 
 let model = simulation {
   let! timer = ArrivalTimer.create
   let! successTimer = ArrivalTimer.create
   let! failureTimer = ArrivalTimer.create
   
-  let stream = Stream.randomExponential streamDelay
-
   let! firstManagersQueue = queue
   let! firstHRQueue = queue 
-  
   let! secondManagersQueue = queue
   let! secondHRQueue = queue
-  
   let! firstInterviewQueue = queue
   let! secondInterviewQueue = queue
-  
   let! failureQueue = queue
   let! successQueue = queue
   
-  let! managersServer = createServer Server.createRandomExponential cvTransferServingTime managersAmount
-  let! hrServer = createServer Server.createRandomExponential cvTransferServingTime hrAmount
+  let! managers = createServer managersAmount ^ fun _ -> Server.createRandomExponential cvTransferServingTime
+  let! recruiters = createServer hrAmount ^ fun _ -> Server.createRandomExponential cvTransferServingTime
 
   // Util
   let try_ success prob = choose success failureQueue prob
 
   // Here goes action
   // M or HR
+  let stream = Stream.randomExponential streamDelay
   do!
     stream
-    |> choose firstHRQueue firstManagersQueue 0.9
+    |> choose firstHRQueue firstManagersQueue hrChoiceProbability
     |> run
+  
+  let! delay = createServer 10000 ^ fun _ -> Server.createRandomExponential ^ days 1 
   
   // Manager -> HRs
   do!
     dequeue firstManagersQueue
-    |> serve managersServer
-    |> Processor.randomExponential ^ days 1 // delay
+    |> serve managers
+    |> serve delay
     |> goto firstHRQueue
     |> run
   
   // HRs
   let scale = 7
   let mean = hours 3
-  
+
+  let! delay = createServer 10000 ^ fun _ -> Server.createRandomErlang (float scale / mean) scale  
+
   do!
     dequeue firstHRQueue
-    |> serve hrServer
-    |> Processor.randomErlang (float scale / mean) scale // delay
-    |> try_ secondManagersQueue 0.4
+    |> serve recruiters
+    |> serve delay
+    |> try_ secondManagersQueue successProbabilty
     |> run
   
+  let! delay = createServer 10000 ^ fun _ -> Server.createRandomExponential ^ days 1  
+
   // Managers
   do!
     dequeue secondManagersQueue
-    |> serve managersServer
-    |> Processor.randomExponential ^ days 1 // delay
-    |> try_ secondHRQueue 0.4
+    |> serve managers
+    |> serve delay
+    |> try_ secondHRQueue successProbabilty
     |> run
     
-  do!
-    dequeue secondHRQueue
-    |> serve hrServer
-    |> Processor.randomExponential ^ days 7 // delay
-    |> try_ firstInterviewQueue 0.4
-    |> run
+  let! delay = createServer 10000 ^ fun _ -> Server.createRandomExponential ^ days 7
   
   do!
+    dequeue secondHRQueue
+    |> serve recruiters
+    |> serve delay
+    |> try_ firstInterviewQueue successProbabilty
+    |> run
+  
+  let! delay = createServer 10000 ^ fun _ -> Server.createRandomExponential ^ days 1
+
+  do!
     dequeue firstInterviewQueue
-    |> serve hrServer
-    |> serve managersServer
+    |> serve recruiters
+    |> serve managers
+    |> serve delay
     |> Processor.arrc ^ fun x -> proc {
-      let! success = Parameter.lift ^ Parameter.randomTrue 0.5
-      let! secondInterview = Parameter.lift ^ Parameter.randomTrue 0.1
+      let! success = Parameter.lift ^ Parameter.randomTrue successProbabilty
+      let! secondInterview = Parameter.lift ^ Parameter.randomTrue successProbabilty
 
       let queue =
         if not success then
@@ -104,11 +116,14 @@ let model = simulation {
     }
     |> run
   
+  let! delay = createServer 10000 ^ fun _ -> Server.createRandomExponential ^ days 2
+
   do!
     dequeue secondInterviewQueue
-    |> serve hrServer
-    |> serve managersServer
-    |> try_ successQueue 0.5
+    |> serve recruiters
+    |> serve managers
+    |> serve delay
+    |> try_ successQueue successProbabilty
     |> run
   
   // Failure
@@ -124,14 +139,18 @@ let model = simulation {
     |> ArrivalTimer.processor timer
     |> ArrivalTimer.processor successTimer
     |> run
-
     
   return [
-    ResultSource.From("firstHRQueue", firstHRQueue)
     ResultSource.From("firstManagersQueue", firstManagersQueue)
+    ResultSource.From("firstHRQueue", firstHRQueue)
     ResultSource.From("secondManagersQueue", secondManagersQueue)
-    ResultSource.From("hrServer", hrServer)
-    ResultSource.From("managersServer", managersServer)
+    ResultSource.From("secondHRQueue", secondHRQueue)
+    ResultSource.From("firstInterviewQueue", firstInterviewQueue)
+    ResultSource.From("secondInterviewQueue", secondInterviewQueue)
+    ResultSource.From("failureQueue", failureQueue)
+    ResultSource.From("successQueue", successQueue)
+    ResultSource.From("hrServer", recruiters)
+    ResultSource.From("managersServer", managers)
     ResultSource.From("timer", timer)
     ResultSource.From("successTimer", successTimer)
     ResultSource.From("failureTimer", failureTimer)
@@ -140,31 +159,28 @@ let model = simulation {
 
 let specs = {
   StartTime = 0.0
-  StopTime = days 365
+  StopTime = days 30
   DT = minutes 1
   Method = RungeKutta4
   GeneratorType = StrongGenerator
 }
 
-let serverProvider series =
-  let series1 = series >> ResultSet.findById ServerProcessingFactorId
-
-  [
-    ExperimentProvider.deviationChart series1
-    ExperimentProvider.lastValueStats series1
-    ExperimentProvider.lastValueHistogram series1
-  ] |> ExperimentProvider.concat
-
-let runCount = 10
+let runCount = 1
 let run() =
   let experiment = Experiment()
 
   experiment.Specs <- specs
   experiment.RunCount <- runCount
 
-  let firstHRQueue = ResultSet.findByName "firstHRQueue"
   let firstManagersQueue = ResultSet.findByName "firstManagersQueue"
+  let firstHRQueue = ResultSet.findByName "firstHRQueue"
   let secondManagersQueue = ResultSet.findByName "secondManagersQueue"
+  let secondHRQueue = ResultSet.findByName "secondHRQueue"
+  let firstInterviewQueue = ResultSet.findByName "firstInterviewQueue"
+  let secondInterviewQueue = ResultSet.findByName "secondInterviewQueue"
+  let failureQueue = ResultSet.findByName "failureQueue"
+  let successQueue = ResultSet.findByName "successQueue"
+  
   let firstHRServer = ResultSet.findByName "hrServer"
   let firstManagersServer = ResultSet.findByName "managersServer"
   let timer = ResultSet.findByName "timer"
@@ -172,16 +188,21 @@ let run() =
   let failureTimer = ResultSet.findByName "failureTimer"
   
   let providers = [
-    ExperimentProvider.infiniteQueue firstHRQueue
-    ExperimentProvider.infiniteQueue firstManagersQueue
-    ExperimentProvider.infiniteQueue secondManagersQueue
-    
-    serverProvider firstHRServer
-    serverProvider firstManagersServer
-    
     ExperimentProvider.arrivalTimer timer
     ExperimentProvider.arrivalTimer successTimer
     ExperimentProvider.arrivalTimer failureTimer
+    
+    ExperimentProvider.infiniteQueue firstManagersQueue
+    ExperimentProvider.infiniteQueue firstHRQueue
+    ExperimentProvider.infiniteQueue secondManagersQueue
+    ExperimentProvider.infiniteQueue secondHRQueue
+    ExperimentProvider.infiniteQueue firstInterviewQueue
+    ExperimentProvider.infiniteQueue secondInterviewQueue
+//    ExperimentProvider.infiniteQueue failureQueue
+//    ExperimentProvider.infiniteQueue successQueue
+    
+    serverProvider firstHRServer
+    serverProvider firstManagersServer    
   ]
   
   experiment.RenderHtml(model, providers)
