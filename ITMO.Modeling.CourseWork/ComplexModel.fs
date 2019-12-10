@@ -159,7 +159,7 @@ let model = simulation {
 
 let specs = {
   StartTime = 0.0
-  StopTime = days 30
+  StopTime = days 365
   DT = minutes 1
   Method = RungeKutta4
   GeneratorType = StrongGenerator
